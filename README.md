@@ -1,148 +1,110 @@
-# TSDX React User Guide
+# useDraftReducer
 
-Congrats! You just saved yourself hours of work by bootstrapping this project with TSDX. Let’s get you oriented with what’s here and how to use it.
+`useDraftReducer` is a React hook that wraps the regular `React.useReducer` and takes an optional second reducer, a draft reducer. This to enable people to make changes to how your components updates state internally.
 
-> This TSDX setup is meant for developing React components (not apps!) that can be published to NPM. If you’re looking to build an app, you should use `create-react-app`, `razzle`, `nextjs`, `gatsby`, or `react-static`.
+This `useReducer` gets called with a draft of the internal state for people to override, using their draft reducer.
 
-> If you’re new to TypeScript and React, checkout [this handy cheatsheet](https://github.com/sw-yx/react-typescript-cheatsheet/)
+It is based off the blog post [The State Reducer Pattern with React Hooks](https://kentcdodds.com/blog/the-state-reducer-pattern-with-react-hooks) written by [Kent C. Dodds](https://kentcdodds.com/about/).
 
-## Commands
+## Install
 
-TSDX scaffolds your new library inside `/src`, and also sets up a [Parcel-based](https://parceljs.org) playground for it inside `/example`.
-
-The recommended workflow is to run TSDX in one terminal:
+### With Yarn
 
 ```
-npm start # or yarn start
+yarn add use-draft-reducer
 ```
 
-This builds to `/dist` and runs the project in watch mode so any edits you save inside `src` causes a rebuild to `/dist`.
-
-Then run the example inside another:
+### With NPM
 
 ```
-cd example
-npm i # or yarn to install dependencies
-npm start # or yarn start
+npm install use-draft-reducer --save
 ```
 
-The default example imports and live reloads whatever is in `/dist`, so if you are seeing an out of date component, make sure TSDX is running in watch mode like we recommend above. **No symlinking required**, [we use Parcel's aliasing](https://github.com/palmerhq/tsdx/pull/88/files).
+## Example
 
-To do a one-off build, use `npm run build` or `yarn build`.
+Working example can be foud under `example/`, need to extract it from the main repo though. To run it, just run `yarn install` or `npm install` then `yarn start` or `npm start`.
 
-To run tests, use `npm test` or `yarn test`.
-
-## Configuration
-
-Code quality is [set up for you](https://github.com/palmerhq/tsdx/pull/45/files) with `prettier`, `husky`, and `lint-staged`. Adjust the respective fields in `package.json` accordingly.
-
-### Jest
-
-Jest tests are set up to run with `npm test` or `yarn test`. This runs the test watcher (Jest) in an interactive mode. By default, runs tests related to files changed since the last commit.
-
-#### Setup Files
-
-This is the folder structure we set up for you:
-
-```
-/example
-  index.html
-  index.tsx       # test your component here in a demo app
-  package.json
-  tsconfig.json
-/src
-  index.tsx       # EDIT THIS
-/test
-  blah.test.tsx   # EDIT THIS
-.gitignore
-package.json
-README.md         # EDIT THIS
-tsconfig.json
-```
-
-#### React Testing Library
-
-We do not set up `react-testing-library` for you yet, we welcome contributions and documentation on this.
-
-### Rollup
-
-TSDX uses [Rollup v1.x](https://rollupjs.org) as a bundler and generates multiple rollup configs for various module formats and build settings. See [Optimizations](#optimizations) for details.
-
-### TypeScript
-
-`tsconfig.json` is set up to interpret `dom` and `esnext` types, as well as `react` for `jsx`. Adjust according to your needs.
-
-## Continuous Integration
-
-### Travis
-
-_to be completed_
-
-### Circle
-
-_to be completed_
-
-## Optimizations
-
-Please see the main `tsdx` [optimizations docs](https://github.com/palmerhq/tsdx#optimizations). In particular, know that you can take advantage of development-only optimizations:
+Your custom hook returns a state and some actions for people using this hook to take advantage of.
 
 ```js
-// ./types/index.d.ts
-declare var __DEV__: boolean;
+// useCustomHook.js
+import useDraftReducer from 'use-draft-reducer';
 
-// inside your code...
-if (__DEV__) {
-  console.log('foo');
-}
+const reducer = (prevState, action) => {
+  switch (action.type) {
+    case 'INCREMENT': {
+      return { ...prevState, value: prevState.value + 1 };
+    }
+    case 'DECREMENT': {
+      return { ...prevState, value: prevState.value - 1 };
+    }
+    case 'SET': {
+      return { ...prevState, value: action.payload };
+    }
+    default:
+      throw Error(`No action with typ ${action.type} was found.`);
+  }
+};
+
+const useCustomHook = ({ draftReducer }) => {
+  const [state, dispatch] = useDraftReducer(
+    reducer,
+    { value: 834 },
+    draftReducer
+  );
+
+  const increment = () => dispatch({ type: 'INCREMENT' });
+  const decrement = () => dispatch({ type: 'DECREMENT' });
+  const setValue = value => dispatch({ type: 'SET', payload: value });
+
+  return { value: state.value, increment, decrement, setValue };
+};
+
+export default useCustomHook;
 ```
 
-You can also choose to install and use [invariant](https://github.com/palmerhq/tsdx#invariant) and [warning](https://github.com/palmerhq/tsdx#warning) functions.
+Someone else using your hook can now pass one of their own reducer, and make som changes to the draft if they wish, or just return action.draft if no changes needs to be done.
 
-## Module Formats
+```js
+// index.js
+import React, { StrictMode } from 'react';
+import ReactDOM from 'react-dom';
+import useCustomHook from './useCustomHook';
 
-CJS, ESModules, and UMD module formats are supported.
+const ExampleComponent = props => {
+  const { value, increment, decrement, setValue } = useCustomHook(
+    (prevState, action) => {
+      if (action.type === 'INCREMENT') {
+        // We want to increment by two instead by one
+        return { ...prevState, value: prevState.value + 2 };
+      }
+      return action.draft;
+    }
+  );
 
-The appropriate paths are configured in `package.json` and `dist/index.js` accordingly. Please report if any issues are found.
+  return (
+    <div>
+      <p>value: {value}</p>
+      <button type="button" onClick={increment}>
+        increment
+      </button>
+      <button type="button" onClick={decrement}>
+        decrement
+      </button>
+      <input
+        type="number"
+        value={value}
+        onChange={event => setValue(event.target.value)}
+      ></input>
+    </div>
+  );
+};
 
-## Using the Playground
+const App = () => (
+  <StrictMode>
+    <ExampleComponent />
+  </StrictMode>
+);
 
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
-cd example
-npm i # or yarn to install dependencies
-npm start # or yarn start
-```
-
-The default example imports and live reloads whatever is in `/dist`, so if you are seeing an out of date component, make sure TSDX is running in watch mode like we recommend above. **No symlinking required**!
-
-## Named Exports
-
-Per Palmer Group guidelines, [always use named exports.](https://github.com/palmerhq/typescript#exports) Code split inside your React app instead of your React library.
-
-## Including Styles
-
-There are many ways to ship styles, including with CSS-in-JS. TSDX has no opinion on this, configure how you like.
-
-For vanilla CSS, you can include it at the root directory and add it to the `files` section in your `package.json`, so that it can be imported separately by your users and run through their bundler's loader.
-
-## Publishing to NPM
-
-We recommend using https://github.com/sindresorhus/np.
-
-## Usage with Lerna
-
-When creating a new package with TSDX within a project set up with Lerna, you might encounter a `Cannot resolve dependency` error when trying to run the `example` project. To fix that you will need to make changes to the `package.json` file _inside the `example` directory_.
-
-The problem is that due to the nature of how dependencies are installed in Lerna projects, the aliases in the example project's `package.json` might not point to the right place, as those dependencies might have been installed in the root of your Lerna project.
-
-Change the `alias` to point to where those packages are actually installed. This depends on the directory structure of your Lerna project, so the actual path might be different from the diff below.
-
-```diff
-   "alias": {
--    "react": "../node_modules/react",
--    "react-dom": "../node_modules/react-dom"
-+    "react": "../../../node_modules/react",
-+    "react-dom": "../../../node_modules/react-dom"
-   },
-```
-
-An alternative to fixing this problem would be to remove aliases altogether and define the dependencies referenced as aliases as dev dependencies instead. [However, that might cause other problems.](https://github.com/palmerhq/tsdx/issues/64)
