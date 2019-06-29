@@ -3,9 +3,10 @@
   "author": {
     "name": "Fredrik Johansson"
   },
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/frim85/use-draft-reducer"
+    "url": "https://github.com/FrimJo/use-draft-reducer"
   },
   "version": "0.1.0",
   "main": "dist/index.js",
