@@ -22,7 +22,7 @@ npm install use-draft-reducer --save
 
 ## Example
 
-> Working example can be foud under `example/`, need to extract it from the main repo though. To run it, just run `yarn install` or `npm install` then `yarn start` or `npm start`.
+> Working example can be foud under `/example`, To run it, just run `yarn install` or `npm install` then `yarn start` or `npm start`.
 
 Your custom hook returns a state and some actions for people using this hook to take advantage of.
 
@@ -95,7 +95,7 @@ const ExampleComponent = props => {
         type="number"
         value={value}
         onChange={event => setValue(event.target.value)}
-      ></input>
+      />
     </div>
   );
 };
