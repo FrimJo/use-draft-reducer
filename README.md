@@ -26,11 +26,18 @@ npm install use-draft-reducer --save
 
 Your custom hook returns a state and some actions for people using this hook to take advantage of.
 
-```js
-// useCustomHook.js
-import useDraftReducer from 'use-draft-reducer';
+```ts
+// useCustomHook.ts
+import React from 'react';
+import useDraftReducer, { DraftReducer } from '../src';
 
-const reducer = (prevState, action) => {
+type State = Readonly<{ value: number }>;
+
+type Action = Readonly<
+  { type: 'INCREMENT' } | { type: 'DECREMENT' } | { type: 'SET'; value: number }
+>;
+
+const reducer: React.Reducer<State, Action> = (prevState, action) => {
   switch (action.type) {
     case 'INCREMENT': {
       return { ...prevState, value: prevState.value + 1 };
@@ -39,14 +46,12 @@ const reducer = (prevState, action) => {
       return { ...prevState, value: prevState.value - 1 };
     }
     case 'SET': {
-      return { ...prevState, value: action.payload };
+      return { ...prevState, value: action.value };
     }
-    default:
-      throw Error(`No action with typ ${action.type} was found.`);
   }
 };
 
-const useCustomHook = ({ draftReducer }) => {
+const useCustomHook = (draftReducer: DraftReducer<State, Action>) => {
   const [state, dispatch] = useDraftReducer(
     reducer,
     { value: 834 },
@@ -55,7 +60,7 @@ const useCustomHook = ({ draftReducer }) => {
 
   const increment = () => dispatch({ type: 'INCREMENT' });
   const decrement = () => dispatch({ type: 'DECREMENT' });
-  const setValue = value => dispatch({ type: 'SET', payload: value });
+  const setValue = (value: number) => dispatch({ type: 'SET', value });
 
   return { value: state.value, increment, decrement, setValue };
 };
@@ -65,13 +70,13 @@ export default useCustomHook;
 
 Someone else using your hook can now pass one of their own reducer, and make som changes to the draft if they wish, or just return action.draft if no changes needs to be done.
 
-```js
-// index.js
+```ts
+// index.tsx
 import React, { StrictMode } from 'react';
 import ReactDOM from 'react-dom';
 import useCustomHook from './useCustomHook';
 
-const ExampleComponent = props => {
+const ExampleComponent: React.FunctionComponent = props => {
   const { value, increment, decrement, setValue } = useCustomHook(
     (prevState, action) => {
       if (action.type === 'INCREMENT') {
@@ -94,8 +99,8 @@ const ExampleComponent = props => {
       <input
         type="number"
         value={value}
-        onChange={event => setValue(event.target.value)}
-      />
+        onChange={event => setValue(+event.target.value)}
+      ></input>
     </div>
   );
 };

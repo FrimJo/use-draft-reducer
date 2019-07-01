@@ -2,7 +2,7 @@ import React, { StrictMode } from 'react';
 import ReactDOM from 'react-dom';
 import useCustomHook from './useCustomHook';
 
-const ExampleComponent = props => {
+const ExampleComponent: React.FunctionComponent = props => {
   const { value, increment, decrement, setValue } = useCustomHook(
     (prevState, action) => {
       if (action.type === 'INCREMENT') {
@@ -25,7 +25,7 @@ const ExampleComponent = props => {
       <input
         type="number"
         value={value}
-        onChange={event => setValue(event.target.value)}
+        onChange={event => setValue(+event.target.value)}
       ></input>
     </div>
   );

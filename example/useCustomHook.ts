@@ -1,6 +1,13 @@
-import useDraftReducer from 'use-draft-reducer';
+import React from 'react';
+import useDraftReducer, { DraftReducer } from '../src';
 
-const reducer = (prevState, action) => {
+type State = Readonly<{ value: number }>;
+
+type Action = Readonly<
+  { type: 'INCREMENT' } | { type: 'DECREMENT' } | { type: 'SET'; value: number }
+>;
+
+const reducer: React.Reducer<State, Action> = (prevState, action) => {
   switch (action.type) {
     case 'INCREMENT': {
       return { ...prevState, value: prevState.value + 1 };
@@ -9,14 +16,12 @@ const reducer = (prevState, action) => {
       return { ...prevState, value: prevState.value - 1 };
     }
     case 'SET': {
-      return { ...prevState, value: action.payload };
+      return { ...prevState, value: action.value };
     }
-    default:
-      throw Error(`No action with typ ${action.type} was found.`);
   }
 };
 
-const useCustomHook = ({ draftReducer }) => {
+const useCustomHook = (draftReducer: DraftReducer<State, Action>) => {
   const [state, dispatch] = useDraftReducer(
     reducer,
     { value: 834 },
@@ -25,7 +30,7 @@ const useCustomHook = ({ draftReducer }) => {
 
   const increment = () => dispatch({ type: 'INCREMENT' });
   const decrement = () => dispatch({ type: 'DECREMENT' });
-  const setValue = value => dispatch({ type: 'SET', payload: value });
+  const setValue = (value: number) => dispatch({ type: 'SET', value });
 
   return { value: state.value, increment, decrement, setValue };
 };
