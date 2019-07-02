@@ -13,8 +13,7 @@
     "scheduler/tracing": "../node_modules/scheduler/tracing-profiling"
   },
   "dependencies": {
-    "react-app-polyfill": "^1.0.0",
-    "tslib": "^1.10.0"
+    "react-app-polyfill": "^1.0.0"
   },
   "devDependencies": {
     "@types/react": "^16.8.15",
